@@ -1,7 +1,6 @@
 import os
 import time
 import tkinter
-from datetime import datetime
 
 from PIL import Image
 import pyscreenshot
@@ -69,23 +68,39 @@ def scale_image(image: Image, scale: float) -> Image:
     return image
 
 
-def combine_images(images: list) -> Image:
-    """Return combined image from a grid of identically-sized images.
-    images is a 2d list of Image objects. The images should
-    be already sorted/arranged when provided to this function.
-    """
-    img_width = images[0][0].width
-    img_height = images[0][0].height
-    new_size = (img_width * len(images[0]), img_height * len(images))
-    new_image = Image.new('RGB', new_size)
+def getting_boundary_coordinates(meters: float, lat: float, long: float):
+    coefficient = meters * 0.0000089
 
-    # Add all the images from the grid to the new, blank image
-    for rowindex, row in enumerate(images):
-        for colindex, image in enumerate(row):
-            location = (colindex * img_width, rowindex * img_height)
-            new_image.paste(image, location)
+    north = lat + coefficient
+    south = lat - coefficient
 
-    return new_image
+    east = long + coefficient / Math.cos(my_lat * 0.018)
+    west = long - coefficient / Math.cos(my_lat * 0.018)
+
+    return north, south, west, east
+
+
+def create_map_from_osm(outfile: str, lat: float, long: float, meters: float, network_type: str, dpi: int,
+                        default_width: int):
+    north, south, east, west = getting_boundary_coordinates(meters=meters, lat=lat, long=long)
+
+    fp = f'./images/{outfile}-map.png'
+
+    tag_building = {'building': True}
+    tag_nature = {'natural': True, 'landuse': 'forest', 'landuse': 'grass'}
+    tag_water = {'natural': 'water'}
+
+    G = ox.graph_from_bbox(north, south, east, west, network_type=network_type)
+    gdf_building = ox.geometries_from_bbox(north, south, east, west, tags=tag_building)
+    gdf_nature = ox.geometries_from_bbox(north, south, east, west, tags=tag_nature)
+    gdf_water = ox.geometries_from_bbox(north, south, east, west, tags=tag_water)
+
+    fig, ax = ox.plot_figure_ground(G, default_width=default_width, save=False, show=False, close=True)
+    fig, ax = ox.plot_footprints(gdf_nature, color='green', ax=ax, filepath=fp, dpi=dpi, save=True, show=False,
+                                 close=True)
+    fig, ax = ox.plot_footprints(gdf_water, color='blue', ax=ax, filepath=fp, dpi=dpi, save=True, show=False,
+                                 close=True)
+    fig, ax = ox.plot_footprints(gdf_building, ax=ax, filepath=fp, dpi=dpi, save=True, show=False, close=True)
 
 
 def create_map(lat_start: float, long_start: float, zoom: int,
@@ -97,9 +112,9 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     """
 
     Args:
-        number: specific number?
         lat_start: Top-left coordinate to start taking screenshots.
         long_start: Top-left coordinate to start taking screenshots.
+        number: Name of image
         number_rows: Number of rows to take screenshot.
         number_cols: Number of columns to to create screenshot.
         scale: Percent to scale each image to reduce final resolution
@@ -124,6 +139,7 @@ def create_map(lat_start: float, long_start: float, zoom: int,
         offset_top: Top offset.
         offset_bottom: Bottom offset.
         offset_left: Left offset.
+        zoom: zoom level
     """
 
     # DRIVER Selection
@@ -139,8 +155,8 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     screen_width, screen_height = get_screen_resolution()
 
     # Shifting values for lat and long
-    lat_shift = calc_latitude_shift(screen_height, (offset_top + offset_bottom), zoom) - 0.00021
-    long_shift = calc_longitude_shift(screen_width, (offset_left + offset_right), zoom) + 0.000595
+    lat_shift = calc_latitude_shift(screen_height, (offset_top + offset_bottom), zoom)
+    long_shift = calc_longitude_shift(screen_width, (offset_left + offset_right), zoom)
 
     # Giving numbers for map and satellite images
     c_map = number
@@ -149,14 +165,11 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     # Writing coordinates to the file
     f = open("coordinates.txt", "w+")
 
-    images = [[None for _ in range(number_cols)]
-              for _ in range(number_rows)]
-
     """
     i = 0 -> Map View
     i = 1 -> Satellite View
     """
-    for i in range(1, 2):
+    for i in range(2):
         for row in range(number_rows):
             for col in range(number_cols):
 
@@ -193,25 +206,15 @@ def create_map(lat_start: float, long_start: float, zoom: int,
                 image = scale_image(image, scale)
                 if i == 0:
                     # image.save(f"{outfile}-map-{row}-{col}.png")  # To save the row-col position uncomment
-                    image.save(f"{outfile}-map-{c_map}.png")
+                    image.save(f"./images/{outfile}-map-{c_map}.png")
                     f.write(f"{outfile}-{c_map}.png -> Lat: {latitude} Long: {longitude} URL: {url} \n")
                     c_map += 1
                 else:
                     # image.save(f"{outfile}-{row}-{col}.png") # To save the row-col position uncomment
-                    image.save(f"{outfile}-{c_image}.png")
-                    images[row][col] = image
+                    image.save(f"./images/{outfile}-{c_image}.png")
                     c_image += 1
 
     # Close the browser
     driver.close()
     driver.quit()
-
-    # Combine all the images into one, then save it to disk
-    final = combine_images(images)
-    timestamp = datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
-
-    outfile = 'test.png'
-
-    final.save(outfile)
-
     f.close()
