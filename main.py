@@ -68,23 +68,23 @@ def scale_image(image: Image, scale: float) -> Image:
     return image
 
 
-def getting_boundary_coordinates(meters: float, lat: float, long: float):
-    coefficient = meters * 0.0000089
+def getting_boundary_coordinates(lat: float, long: float) -> (float, float, float, float):
+    lat_coef = 0.00032
+    long_coef = 0.00094
 
-    north = lat + coefficient
-    south = lat - coefficient
-
-    east = long + coefficient / Math.cos(my_lat * 0.018)
-    west = long - coefficient / Math.cos(my_lat * 0.018)
+    north = lat + lat_coef
+    south = lat - lat_coef
+    east = long + long_coef
+    west = long - long_coef
 
     return north, south, west, east
 
 
-def create_map_from_osm(outfile: str, lat: float, long: float, meters: float, network_type: str, dpi: int,
-                        default_width: int):
-    north, south, east, west = getting_boundary_coordinates(meters=meters, lat=lat, long=long)
+def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, west: float, east: float, dpi: int):
+    default_width = 2
+    network_type = 'drive'
 
-    fp = f'./images/{outfile}-map.png'
+    fp = f'./images/{outfile}-osm-{c_osm}.png'
 
     tag_building = {'building': True}
     tag_nature = {'natural': True, 'landuse': 'forest', 'landuse': 'grass'}
@@ -161,6 +161,7 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     # Giving numbers for map and satellite images
     c_map = number
     c_image = number
+    c_osm = number
 
     # Writing coordinates to the file
     f = open("coordinates.txt", "w+")
@@ -168,6 +169,7 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     """
     i = 0 -> Map View
     i = 1 -> Satellite View
+    i = 2 -> OpenStreetMap View
     """
     for i in range(2):
         for row in range(number_rows):
@@ -176,43 +178,50 @@ def create_map(lat_start: float, long_start: float, zoom: int,
                 latitude = lat_start + (lat_shift * row)
                 longitude = long_start + (long_shift * col)
 
-                url = 'https://www.google.com/maps/'
+                if i == 2:
+                    north, south, east, west = getting_boundary_coordinates(lat=lat, long=long)
+                    create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east, west=west)
+                    c_osm += 1
 
-                # Map URL
-                if i == 0:
-                    url += '@{lat},{long},{z}z'.format(lat=latitude, long=longitude, z=zoom)
-                # Satellite URL
-                elif i == 1:
-                    url += '@{lat},{long},{z}z/data=!3m1!1e3'.format(lat=latitude, long=longitude, z=zoom)
-
-                driver.get(url)
-                time.sleep(5)
-
-                # Remove labels from Satellite view
-                if i == 1:
-                    js_code_execute(driver, remove_labels[0])
-                    time.sleep(3)
-                    js_code_execute(driver, remove_labels[1])
-
-                # Remove fields from Map view
-                for j in remove_from_view:
-                    js_code_execute(driver, j)
-
-                # Let the map load all assets before taking a screenshot
-                time.sleep(sleep_time)
-                image = screenshot(screen_width, screen_height, offset_left, offset_top, offset_right, offset_bottom)
-
-                # Scale image up or down if desired, then save in memory
-                image = scale_image(image, scale)
-                if i == 0:
-                    # image.save(f"{outfile}-map-{row}-{col}.png")  # To save the row-col position uncomment
-                    image.save(f"./images/{outfile}-map-{c_map}.png")
-                    f.write(f"{outfile}-{c_map}.png -> Lat: {latitude} Long: {longitude} URL: {url} \n")
-                    c_map += 1
                 else:
-                    # image.save(f"{outfile}-{row}-{col}.png") # To save the row-col position uncomment
-                    image.save(f"./images/{outfile}-{c_image}.png")
-                    c_image += 1
+                    url = 'https://www.google.com/maps/'
+
+                    # Map URL
+                    if i == 0:
+                        url += '@{lat},{long},{z}z'.format(lat=latitude, long=longitude, z=zoom)
+                    # Satellite URL
+                    elif i == 1:
+                        url += '@{lat},{long},{z}z/data=!3m1!1e3'.format(lat=latitude, long=longitude, z=zoom)
+
+                    driver.get(url)
+                    time.sleep(5)
+
+                    # Remove labels from Satellite view
+                    if i == 1:
+                        js_code_execute(driver, remove_labels[0])
+                        time.sleep(3)
+                        js_code_execute(driver, remove_labels[1])
+
+                    # Remove fields from Map view
+                    for j in remove_from_view:
+                        js_code_execute(driver, j)
+
+                    # Let the map load all assets before taking a screenshot
+                    time.sleep(sleep_time)
+                    image = screenshot(screen_width, screen_height, offset_left, offset_top, offset_right,
+                                       offset_bottom)
+
+                    # Scale image up or down if desired, then save in memory
+                    image = scale_image(image, scale)
+                    if i == 0:
+                        # image.save(f"{outfile}-map-{row}-{col}.png")  # To save the row-col position uncomment
+                        image.save(f"./images/{outfile}-map-{c_map}.png")
+                        f.write(f"{outfile}-{c_map}.png -> Lat: {latitude} Long: {longitude} URL: {url} \n")
+                        c_map += 1
+                    else:
+                        # image.save(f"{outfile}-{row}-{col}.png") # To save the row-col position uncomment
+                        image.save(f"./images/{outfile}-{c_image}.png")
+                        c_image += 1
 
     # Close the browser
     driver.close()
