@@ -1,0 +1,10 @@
+/images
+/images-1
+/satellite
+/test
+/map
+/__pycache__
+/main_2.py
+/coordinates.txt
+\image-*
+/.idea

@@ -1,0 +1,10 @@
+name: gm-with-osm
+channels:
+  - conda-forge
+dependencies:
+  - jupyterlab
+  - osmnx=1.0.1
+  - python-igraph
+  - pip
+  - pip:
+      - -r file:requirements.txt
