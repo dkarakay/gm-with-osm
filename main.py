@@ -1,6 +1,7 @@
 import os
 import time
 import tkinter
+import osmnx as ox
 
 from PIL import Image
 import pyscreenshot
@@ -69,20 +70,21 @@ def scale_image(image: Image, scale: float) -> Image:
 
 
 def getting_boundary_coordinates(lat: float, long: float) -> (float, float, float, float):
-    lat_coef = 0.00032
-    long_coef = 0.00094
+    lat_coef = 0.00035
+    long_coef = 0.00095
 
     north = lat + lat_coef
     south = lat - lat_coef
     east = long + long_coef
     west = long - long_coef
 
-    return north, south, west, east
+    return north, south, east, west
 
 
-def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, west: float, east: float, dpi: int):
+def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, west: float, east: float):
+    dpi = 100
     default_width = 2
-    network_type = 'drive'
+    network_type = 'all'
 
     fp = f'./images/{outfile}-osm-{c_osm}.png'
 
@@ -90,17 +92,25 @@ def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, we
     tag_nature = {'natural': True, 'landuse': 'forest', 'landuse': 'grass'}
     tag_water = {'natural': 'water'}
 
+    ax = None
+
     G = ox.graph_from_bbox(north, south, east, west, network_type=network_type)
+
     gdf_building = ox.geometries_from_bbox(north, south, east, west, tags=tag_building)
     gdf_nature = ox.geometries_from_bbox(north, south, east, west, tags=tag_nature)
     gdf_water = ox.geometries_from_bbox(north, south, east, west, tags=tag_water)
 
-    fig, ax = ox.plot_figure_ground(G, default_width=default_width, save=False, show=False, close=True)
-    fig, ax = ox.plot_footprints(gdf_nature, color='green', ax=ax, filepath=fp, dpi=dpi, save=True, show=False,
-                                 close=True)
-    fig, ax = ox.plot_footprints(gdf_water, color='blue', ax=ax, filepath=fp, dpi=dpi, save=True, show=False,
-                                 close=True)
-    fig, ax = ox.plot_footprints(gdf_building, ax=ax, filepath=fp, dpi=dpi, save=True, show=False, close=True)
+    fig, ax = ox.plot_figure_ground(G, default_width=default_width, dpi=dpi, filepath=fp, save=True, show=False,
+                                    close=True)
+    if ax:
+        if not gdf_building.empty:
+            fig, ax = ox.plot_footprints(gdf_building, ax=ax, filepath=fp, dpi=dpi, save=True, show=True, close=True)
+        if not gdf_nature.empty:
+            fig, ax = ox.plot_footprints(gdf_nature, ax=ax, color='green', filepath=fp, dpi=dpi, save=True, show=False,
+                                         close=True)
+        if not gdf_water.empty:
+            fig, ax = ox.plot_footprints(gdf_water, ax=ax, color='blue', filepath=fp, dpi=dpi, save=True, show=False,
+                                         close=True)
 
 
 def create_map(lat_start: float, long_start: float, zoom: int,
@@ -171,7 +181,7 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     i = 1 -> Satellite View
     i = 2 -> OpenStreetMap View
     """
-    for i in range(2):
+    for i in range(3):
         for row in range(number_rows):
             for col in range(number_cols):
 
@@ -179,7 +189,7 @@ def create_map(lat_start: float, long_start: float, zoom: int,
                 longitude = long_start + (long_shift * col)
 
                 if i == 2:
-                    north, south, east, west = getting_boundary_coordinates(lat=lat, long=long)
+                    north, south, east, west = getting_boundary_coordinates(lat=latitude, long=longitude)
                     create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east, west=west)
                     c_osm += 1
 
