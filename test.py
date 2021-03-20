@@ -17,7 +17,7 @@ def take_screenshot(lat: float, long: float, row: int, col: int, number: int, fi
     create_map(
         lat_start=lat,
         long_start=long,
-        zoom=20,
+        zoom=19,
         number_rows=row,
         number_cols=col,
         scale=0.5,
@@ -33,10 +33,10 @@ def take_screenshot(lat: float, long: float, row: int, col: int, number: int, fi
 
 # Example: 5x5 -> 25 images
 take_screenshot(
-    lat=40.0100192,  # Top left corner latitude
-    long=-83.0134145,  # Top left corner longitude
-    row=1,  # 5 rows
-    col=1,  # 5 columns
-    file_name="bb",  # Map image: "image-example-{number}.png"
+    lat=39.9827945,  # Top left corner latitude
+    long=-83.0209698,  # Top left corner longitude
+    row=2,  # 5 rows
+    col=2,  # 5 columns
+    file_name="oo",  # Map image: "image-example-{number}.png"
     number=0,  # Starting from 0 like image-0.png, image-1.png ...
 )

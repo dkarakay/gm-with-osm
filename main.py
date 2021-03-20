@@ -59,12 +59,14 @@ def screenshot(screen_width: int, screen_height: int,
     y2 = (offset_bottom * -screen_height) + screen_height
     image = pyscreenshot.grab(bbox=(x1, y1, x2, y2))
 
-    offset_top = 1 / 6
-    x1 = offset_top * screen_height
-    y1 = offset_top * screen_height
-    x2 = (1 - offset_top) * screen_height
-    y2 = (1 - offset_top) * screen_height
-    image = pyscreenshot.grab(bbox=(x1, y1, x2, y2))
+    screen = True
+    if screen:
+        offset_top = 1 / 16
+        x1 = offset_top * screen_height
+        y1 = offset_top * screen_height
+        x2 = (1 - offset_top) * screen_height
+        y2 = (1 - offset_top) * screen_height
+        image = pyscreenshot.grab(bbox=(420, 150, 1020, 820))
     return image
 
 
@@ -117,22 +119,27 @@ def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, 
     tag_water = {'natural': 'water'}
 
     bbox = ox.utils_geo.bbox_from_point(point, dist=dist)
-    G = ox.graph_from_point(point, network_type=network_type, dist=dist, truncate_by_edge=True, retain_all=True,
-                            clean_periphery=True)
 
-    gdf_building = ox.geometries_from_point(point, tag_building, dist=dist)
-    gdf_nature = ox.geometries_from_point(point, tag_nature, dist=dist)
-    gdf_water = ox.geometries_from_point(point, tag_water, dist=dist)
+    try:
+        G = ox.graph_from_point(point, network_type=network_type, dist=dist, truncate_by_edge=True, retain_all=True)
+        gdf_building = ox.geometries_from_point(point, tag_building, dist=dist)
+        gdf_nature = ox.geometries_from_point(point, tag_nature, dist=dist)
+        gdf_water = ox.geometries_from_point(point, tag_water, dist=dist)
 
-    fig, ax = ox.plot_figure_ground(G, default_width=default_width, show=False)
+        fig, ax = ox.plot_figure_ground(G, default_width=default_width, show=False)
 
-    if not gdf_building.empty:
-        fig, ax = ox.plot_footprints(gdf_building, ax=ax, bbox=bbox, filepath=fp, dpi=dpi, save=True)
-    if not gdf_nature.empty:
-        fig, ax = ox.plot_footprints(gdf_nature, ax=ax, bbox=bbox, color='green', filepath=fp, dpi=dpi, save=True)
-    if not gdf_water.empty:
-        fig, ax = ox.plot_footprints(gdf_water, ax=ax, bbox=bbox, color='blue', filepath=fp, dpi=dpi, save=True)
-    print('finito')
+        if not gdf_nature.empty:
+            print('nature')
+            fig, ax = ox.plot_footprints(gdf_nature, ax=ax, bbox=bbox, color='green', filepath=fp, dpi=dpi, save=True)
+        if not gdf_water.empty:
+            print('water')
+            fig, ax = ox.plot_footprints(gdf_water, ax=ax, bbox=bbox, color='blue', filepath=fp, dpi=dpi, save=True)
+        if not gdf_building.empty:
+            print('building')
+            fig, ax = ox.plot_footprints(gdf_building, ax=ax, bbox=bbox, filepath=fp, dpi=dpi, save=True)
+        print(f'finito {c_osm}')
+    except:
+        print(f'pass {c_osm}')
 
 
 def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, west: float, east: float):
@@ -243,11 +250,13 @@ def create_map(lat_start: float, long_start: float, zoom: int,
                 longitude = long_start + (long_shift * col)
 
                 if i == 2:
-                    point = (latitude - (lat_shift * row), longitude - (long_shift * col) - 0.000375)
+                    point = (latitude, longitude)
+                    print(point)
+
                     # north, south, east, west = getting_boundary_coordinates(lat=latitude, long=longitude)
                     # create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east, west=west)
-                    create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=35, dpi=200,
-                                           default_width=50)
+                    create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=70, dpi=200,
+                                           default_width=20)
                     c_osm += 1
 
                 elif i == 1:
@@ -266,7 +275,7 @@ def create_map(lat_start: float, long_start: float, zoom: int,
                     # Remove labels from Satellite view
                     if i == 1:
                         js_code_execute(driver, remove_labels[0])
-                        time.sleep(3)
+                        time.sleep(2)
                         js_code_execute(driver, remove_labels[1])
 
                     # Remove fields from Map view
