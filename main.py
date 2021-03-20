@@ -59,11 +59,11 @@ def screenshot(screen_width: int, screen_height: int,
     y2 = (offset_bottom * -screen_height) + screen_height
     image = pyscreenshot.grab(bbox=(x1, y1, x2, y2))
 
-    #offset_top = 1/6
-    #x1 = offset_top * screen_height
-    #y1 = offset_top * screen_height
-    #x2 = (1-offset_top) * screen_height
-    #y2 = (1-offset_top) * screen_height
+    offset_top = 1 / 6
+    x1 = offset_top * screen_height
+    y1 = offset_top * screen_height
+    x2 = (1 - offset_top) * screen_height
+    y2 = (1 - offset_top) * screen_height
     image = pyscreenshot.grab(bbox=(x1, y1, x2, y2))
     return image
 
@@ -116,54 +116,52 @@ def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, 
     tag_nature = {'natural': True, 'landuse': 'forest', 'landuse': 'grass'}
     tag_water = {'natural': 'water'}
 
+    bbox = ox.utils_geo.bbox_from_point(point, dist=dist)
+    G = ox.graph_from_point(point, network_type=network_type, dist=dist, truncate_by_edge=True, retain_all=True,
+                            clean_periphery=True)
+
     gdf_building = ox.geometries_from_point(point, tag_building, dist=dist)
     gdf_nature = ox.geometries_from_point(point, tag_nature, dist=dist)
     gdf_water = ox.geometries_from_point(point, tag_water, dist=dist)
 
-    fig, ax = ox.plot_figure_ground(point=point, dist=dist, network_type=network_type, default_width=default_width,
-                                    save=False, show=False, close=True)
+    fig, ax = ox.plot_figure_ground(G, default_width=default_width, show=False)
 
     if not gdf_building.empty:
-        fig, ax = ox.plot_footprints(gdf_building, ax=ax, filepath=fp, dpi=dpi, save=True, show=True, close=True)
+        fig, ax = ox.plot_footprints(gdf_building, ax=ax, bbox=bbox, filepath=fp, dpi=dpi, save=True)
     if not gdf_nature.empty:
-        fig, ax = ox.plot_footprints(gdf_nature, ax=ax, color='green', filepath=fp, dpi=dpi, save=True, show=False,
-                                     close=True)
+        fig, ax = ox.plot_footprints(gdf_nature, ax=ax, bbox=bbox, color='green', filepath=fp, dpi=dpi, save=True)
     if not gdf_water.empty:
-        fig, ax = ox.plot_footprints(gdf_water, ax=ax, color='blue', filepath=fp, dpi=dpi, save=True, show=False,
-                                     close=True)
-    print('fin')
+        fig, ax = ox.plot_footprints(gdf_water, ax=ax, bbox=bbox, color='blue', filepath=fp, dpi=dpi, save=True)
+    print('finito')
 
 
 def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, west: float, east: float):
-    dpi = 100
-    default_width = 2
-    network_type = 'all'
+    dpi = 200
+    default_width = 6
+    network_type = 'drive'
 
     fp = f'./images/{outfile}-osm-{c_osm}.png'
 
     tag_building = {'building': True}
-    tag_nature = {'natural': True, 'landuse': 'forest', 'landuse': 'grass'}
     tag_water = {'natural': 'water'}
 
     ax = None
 
-    G = ox.graph_from_bbox(north, south, east, west, network_type=network_type)
+    G = ox.graph_from_bbox(north, south, east, west, network_type=network_type,
+                           truncate_by_edge=True, retain_all=True, clean_periphery=True)
 
     gdf_building = ox.geometries_from_bbox(north, south, east, west, tags=tag_building)
-    gdf_nature = ox.geometries_from_bbox(north, south, east, west, tags=tag_nature)
+    gdf_nature = ox.geometries_from_bbox(north, south, east, west,
+                                         tags={'natural': True, 'landuse': 'forest', 'landuse': 'grass'})
     gdf_water = ox.geometries_from_bbox(north, south, east, west, tags=tag_water)
 
-    fig, ax = ox.plot_figure_ground(G, default_width=default_width, dpi=dpi, filepath=fp, save=True, show=False,
-                                    close=True)
-    if ax:
-        if not gdf_building.empty:
-            fig, ax = ox.plot_footprints(gdf_building, ax=ax, filepath=fp, dpi=dpi, save=True, show=True, close=True)
-        if not gdf_nature.empty:
-            fig, ax = ox.plot_footprints(gdf_nature, ax=ax, color='green', filepath=fp, dpi=dpi, save=True, show=False,
-                                         close=True)
-        if not gdf_water.empty:
-            fig, ax = ox.plot_footprints(gdf_water, ax=ax, color='blue', filepath=fp, dpi=dpi, save=True, show=False,
-                                         close=True)
+    fig, ax = ox.plot_figure_ground(G, default_width=default_width, dpi=dpi, filepath=fp, show=False)
+    if not gdf_nature.empty:
+        fig, ax = ox.plot_footprints(gdf_nature, ax=ax, color='green', filepath=fp, dpi=dpi, save=True)
+    if not gdf_water.empty:
+        fig, ax = ox.plot_footprints(gdf_water, ax=ax, color='blue', filepath=fp, dpi=dpi, save=True)
+    if not gdf_building.empty:
+        fig, ax = ox.plot_footprints(gdf_building, ax=ax, filepath=fp, dpi=dpi, save=True)
 
 
 def create_map(lat_start: float, long_start: float, zoom: int,
@@ -221,7 +219,7 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     lat_shift = calc_latitude_shift(screen_height, (offset_top + offset_bottom), zoom) - 0.00021
     long_shift = calc_longitude_shift(screen_width, (offset_left + offset_right), zoom) + 0.000595
 
-    # Giving numbers for map and satellite images
+    # Giving numbers for example and satellite images
     c_map = number
     c_image = number
     c_osm = number
@@ -237,7 +235,7 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     i = 1 -> Satellite View
     i = 2 -> OpenStreetMap View
     """
-    for i in range(1, 2):
+    for i in range(1, 3):
         for row in range(number_rows):
             for col in range(number_cols):
 
@@ -245,11 +243,11 @@ def create_map(lat_start: float, long_start: float, zoom: int,
                 longitude = long_start + (long_shift * col)
 
                 if i == 2:
-                    point = (latitude, longitude)
-                    north, south, east, west = getting_boundary_coordinates(lat=latitude, long=longitude)
-                    create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east, west=west)
-                    create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=35, dpi=100,
-                                           default_width=15)
+                    point = (latitude - (lat_shift * row), longitude - (long_shift * col) - 0.000375)
+                    # north, south, east, west = getting_boundary_coordinates(lat=latitude, long=longitude)
+                    # create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east, west=west)
+                    create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=35, dpi=200,
+                                           default_width=50)
                     c_osm += 1
 
                 elif i == 1:
@@ -275,7 +273,7 @@ def create_map(lat_start: float, long_start: float, zoom: int,
                     for j in remove_from_view:
                         js_code_execute(driver, j)
 
-                    # Let the map load all assets before taking a screenshot
+                    # Let the example load all assets before taking a screenshot
                     time.sleep(sleep_time)
                     image = screenshot(screen_width, screen_height, offset_left, offset_top, offset_right,
                                        offset_bottom)
@@ -283,8 +281,8 @@ def create_map(lat_start: float, long_start: float, zoom: int,
                     # Scale image up or down if desired, then save in memory
                     image = scale_image(image, scale)
                     if i == 0:
-                        # image.save(f"{outfile}-map-{row}-{col}.png")  # To save the row-col position uncomment
-                        # image.save(f"./images/{outfile}-map-{c_map}.png")
+                        # image.save(f"{outfile}-example-{row}-{col}.png")  # To save the row-col position uncomment
+                        # image.save(f"./images/{outfile}-example-{c_map}.png")
                         c_map += 1
                     else:
                         # image.save(f"{outfile}-{row}-{col}.png") # To save the row-col position uncomment
@@ -298,12 +296,12 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     driver.quit()
     f.close()
 
-    #north, south, east, west = lat_start, lat_start + (lat_shift * number_rows), long_start, long_start + (
+    # north, south, east, west = lat_start, lat_start + (lat_shift * number_rows), long_start, long_start + (
     #            long_shift * number_cols)
-    #create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east, west=west)
+    # create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east, west=west)
 
-    #final = combine_images(satellite_images)
+    # final = combine_images(satellite_images)
 
-   # outfile = 'test.png'
+# outfile = 'test.png'
 
-    #final.save(outfile)
+# final.save(outfile)

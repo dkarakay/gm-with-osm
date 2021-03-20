@@ -37,6 +37,6 @@ take_screenshot(
     long=-83.0134145,  # Top left corner longitude
     row=1,  # 5 rows
     col=1,  # 5 columns
-    file_name="image",  # Map image: "image-map-{number}.png"
+    file_name="bb",  # Map image: "image-example-{number}.png"
     number=0,  # Starting from 0 like image-0.png, image-1.png ...
 )
