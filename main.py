@@ -58,6 +58,13 @@ def screenshot(screen_width: int, screen_height: int,
     x2 = (offset_right * -screen_width) + screen_width
     y2 = (offset_bottom * -screen_height) + screen_height
     image = pyscreenshot.grab(bbox=(x1, y1, x2, y2))
+
+    #offset_top = 1/6
+    #x1 = offset_top * screen_height
+    #y1 = offset_top * screen_height
+    #x2 = (1-offset_top) * screen_height
+    #y2 = (1-offset_top) * screen_height
+    image = pyscreenshot.grab(bbox=(x1, y1, x2, y2))
     return image
 
 
@@ -67,6 +74,25 @@ def scale_image(image: Image, scale: float) -> Image:
     height = round(image.height * scale)
     image.thumbnail((width, height))
     return image
+
+
+def combine_images(images: list) -> Image:
+    """Return combined image from a grid of identically-sized images.
+    images is a 2d list of Image objects. The images should
+    be already sorted/arranged when provided to this function.
+    """
+    img_width = images[0][0].width
+    img_height = images[0][0].height
+    new_size = (img_width * len(images[0]), img_height * len(images))
+    new_image = Image.new('RGB', new_size)
+
+    # Add all the images from the grid to the new, blank image
+    for rowindex, row in enumerate(images):
+        for colindex, image in enumerate(row):
+            location = (colindex * img_width, rowindex * img_height)
+            new_image.paste(image, location)
+
+    return new_image
 
 
 def getting_boundary_coordinates(lat: float, long: float) -> (float, float, float, float):
@@ -79,6 +105,33 @@ def getting_boundary_coordinates(lat: float, long: float) -> (float, float, floa
     west = long - long_coef
 
     return north, south, east, west
+
+
+def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, default_width=6):
+    network_type = 'drive'
+
+    fp = f'./images/{outfile}-osm-{c_osm}.png'
+
+    tag_building = {'building': True}
+    tag_nature = {'natural': True, 'landuse': 'forest', 'landuse': 'grass'}
+    tag_water = {'natural': 'water'}
+
+    gdf_building = ox.geometries_from_point(point, tag_building, dist=dist)
+    gdf_nature = ox.geometries_from_point(point, tag_nature, dist=dist)
+    gdf_water = ox.geometries_from_point(point, tag_water, dist=dist)
+
+    fig, ax = ox.plot_figure_ground(point=point, dist=dist, network_type=network_type, default_width=default_width,
+                                    save=False, show=False, close=True)
+
+    if not gdf_building.empty:
+        fig, ax = ox.plot_footprints(gdf_building, ax=ax, filepath=fp, dpi=dpi, save=True, show=True, close=True)
+    if not gdf_nature.empty:
+        fig, ax = ox.plot_footprints(gdf_nature, ax=ax, color='green', filepath=fp, dpi=dpi, save=True, show=False,
+                                     close=True)
+    if not gdf_water.empty:
+        fig, ax = ox.plot_footprints(gdf_water, ax=ax, color='blue', filepath=fp, dpi=dpi, save=True, show=False,
+                                     close=True)
+    print('fin')
 
 
 def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, west: float, east: float):
@@ -165,8 +218,8 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     screen_width, screen_height = get_screen_resolution()
 
     # Shifting values for lat and long
-    lat_shift = calc_latitude_shift(screen_height, (offset_top + offset_bottom), zoom)
-    long_shift = calc_longitude_shift(screen_width, (offset_left + offset_right), zoom)
+    lat_shift = calc_latitude_shift(screen_height, (offset_top + offset_bottom), zoom) - 0.00021
+    long_shift = calc_longitude_shift(screen_width, (offset_left + offset_right), zoom) + 0.000595
 
     # Giving numbers for map and satellite images
     c_map = number
@@ -176,12 +229,15 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     # Writing coordinates to the file
     f = open("coordinates.txt", "w+")
 
+    satellite_images = [[None for _ in range(number_cols)]
+                        for _ in range(number_rows)]
+
     """
     i = 0 -> Map View
     i = 1 -> Satellite View
     i = 2 -> OpenStreetMap View
     """
-    for i in range(3):
+    for i in range(1, 2):
         for row in range(number_rows):
             for col in range(number_cols):
 
@@ -189,11 +245,14 @@ def create_map(lat_start: float, long_start: float, zoom: int,
                 longitude = long_start + (long_shift * col)
 
                 if i == 2:
+                    point = (latitude, longitude)
                     north, south, east, west = getting_boundary_coordinates(lat=latitude, long=longitude)
                     create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east, west=west)
+                    create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=35, dpi=100,
+                                           default_width=15)
                     c_osm += 1
 
-                else:
+                elif i == 1:
                     url = 'https://www.google.com/maps/'
 
                     # Map URL
@@ -225,15 +284,26 @@ def create_map(lat_start: float, long_start: float, zoom: int,
                     image = scale_image(image, scale)
                     if i == 0:
                         # image.save(f"{outfile}-map-{row}-{col}.png")  # To save the row-col position uncomment
-                        image.save(f"./images/{outfile}-map-{c_map}.png")
-                        f.write(f"{outfile}-{c_map}.png -> Lat: {latitude} Long: {longitude} URL: {url} \n")
+                        # image.save(f"./images/{outfile}-map-{c_map}.png")
                         c_map += 1
                     else:
                         # image.save(f"{outfile}-{row}-{col}.png") # To save the row-col position uncomment
+                        f.write(f"{outfile}-{c_map}.png -> Lat: {latitude} Long: {longitude} URL: {url} \n")
                         image.save(f"./images/{outfile}-{c_image}.png")
+                        satellite_images[row][col] = image
                         c_image += 1
 
     # Close the browser
     driver.close()
     driver.quit()
     f.close()
+
+    #north, south, east, west = lat_start, lat_start + (lat_shift * number_rows), long_start, long_start + (
+    #            long_shift * number_cols)
+    #create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east, west=west)
+
+    #final = combine_images(satellite_images)
+
+   # outfile = 'test.png'
+
+    #final.save(outfile)
