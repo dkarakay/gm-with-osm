@@ -1,6 +1,6 @@
 [![Language](https://img.shields.io/badge/language-python-blue.svg)](https://www.python.org/)
 
-# Google Maps Screenshot Taker
+# Google Maps with Open Street Map
 
 ## Installation
 - Install Chrome Webdriver or Firefox Geckodriver 
