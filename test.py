@@ -1,23 +1,30 @@
 from main import create_map
 
 
-def take_screenshot(lat: float, long: float, row: int, col: int, number: int, file_name: str):
+def take_screenshot(lat: float, long: float, row: int, col: int, number: int, file_name: str, gmaps: bool,
+                    gmaps_satellite: bool, zoom: int, osm: True):
     """
 
     Args:
+        col: Column count
+        file_name: File name of the images
+        gmaps: Google Maps View
+        gmaps_satellite: Google Maps Satellite
         lat: Latitude of the left corner
         long: Longitude of the left corner
-        row: Row count
-        col: Column count
         number: Numbering to output file
-
+        row: Row count
+        osm: Open Street Map
+        zoom: Zoom value
     Returns:
 
     """
     create_map(
+        gmaps=gmaps,
+        gmaps_satellite=gmaps_satellite,
         lat_start=lat,
         long_start=long,
-        zoom=19,
+        number=number,
         number_rows=row,
         number_cols=col,
         scale=0.5,
@@ -26,17 +33,21 @@ def take_screenshot(lat: float, long: float, row: int, col: int, number: int, fi
         offset_top=0.17,
         offset_right=0,
         offset_bottom=0.10,
+        osm=osm,
         outfile=file_name,
-        number=number,
+        zoom=zoom,  # can be changed to match OSM with GMaps
     )
 
 
-# Example: 5x5 -> 25 images
+# Example: 2x2 -> 4 images
 take_screenshot(
-    lat=39.9827945,  # Top left corner latitude
-    long=-83.0209698,  # Top left corner longitude
-    row=2,  # 5 rows
-    col=2,  # 5 columns
-    file_name="oo",  # Map image: "image-example-{number}.png"
+    lat=39.9950785,  # Top left corner latitude
+    long=-83.0113507,  # Top left corner longitude
+    row=2,  # 2 rows
+    file_name="test",  # Map image: "/images/test-{number}.png"
     number=0,  # Starting from 0 like image-0.png, image-1.png ...
+    gmaps=False,  # Take screenshot from Google Maps
+    gmaps_satellite=True,  # Take screenshot from Google Maps Satellite
+    osm=True,  # Generate screenshots from OSM
+    zoom=19,
 )

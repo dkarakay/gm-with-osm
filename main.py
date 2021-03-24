@@ -59,13 +59,9 @@ def screenshot(screen_width: int, screen_height: int,
     y2 = (offset_bottom * -screen_height) + screen_height
     image = pyscreenshot.grab(bbox=(x1, y1, x2, y2))
 
+    # Specific settings for my computer to match OSM with Google Maps
     screen = True
     if screen:
-        offset_top = 1 / 16
-        x1 = offset_top * screen_height
-        y1 = offset_top * screen_height
-        x2 = (1 - offset_top) * screen_height
-        y2 = (1 - offset_top) * screen_height
         image = pyscreenshot.grab(bbox=(420, 150, 1020, 820))
     return image
 
@@ -98,6 +94,13 @@ def combine_images(images: list) -> Image:
 
 
 def getting_boundary_coordinates(lat: float, long: float) -> (float, float, float, float):
+    """
+    Getting boundary coordinates for OSM
+
+    :param lat: Input latitude
+    :param long: Input longitude
+    :return: BBox values (North, South, East, West)
+    """
     lat_coef = 0.00035
     long_coef = 0.00095
 
@@ -137,9 +140,12 @@ def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, 
         if not gdf_building.empty:
             print('building')
             fig, ax = ox.plot_footprints(gdf_building, ax=ax, bbox=bbox, filepath=fp, dpi=dpi, save=True)
-        print(f'finito {c_osm}')
+        print(f'finished {c_osm}')
+        return True
+
     except:
-        print(f'pass {c_osm}')
+        print(f'not found {c_osm}')
+        return False
 
 
 def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, west: float, east: float):
@@ -171,15 +177,18 @@ def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, we
         fig, ax = ox.plot_footprints(gdf_building, ax=ax, filepath=fp, dpi=dpi, save=True)
 
 
-def create_map(lat_start: float, long_start: float, zoom: int,
-               number_rows: int, number_cols: int,
+def create_map(gmaps: bool, gmaps_satellite: bool,
+               lat_start: float, long_start: float, number_rows: int, number_cols: int,
+               osm: bool, zoom: int, number: int = 0,
                scale: float = 1, sleep_time: float = 0,
                offset_left: float = 0, offset_top: float = 0,
                offset_right: float = 0, offset_bottom: float = 0,
-               outfile: str = None, number: int = 0):
+               outfile: str = None, ):
     """
 
     Args:
+        gmaps: Take screenshot from Google Maps
+        gmaps_satellite: Take screenshot from Google Maps Satellite
         lat_start: Top-left coordinate to start taking screenshots.
         long_start: Top-left coordinate to start taking screenshots.
         number: Name of image
@@ -207,7 +216,8 @@ def create_map(lat_start: float, long_start: float, zoom: int,
         offset_top: Top offset.
         offset_bottom: Bottom offset.
         offset_left: Left offset.
-        zoom: zoom level
+        osm: Create image from Open Street Map
+        zoom: Zoom level for Google Maps
     """
 
     # DRIVER Selection
@@ -227,8 +237,8 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     long_shift = calc_longitude_shift(screen_width, (offset_left + offset_right), zoom) + 0.000595
 
     # Giving numbers for example and satellite images
-    c_map = number
-    c_image = number
+    c_gmaps = number
+    c_gmaps_satellite = number
     c_osm = number
 
     # Writing coordinates to the file
@@ -237,80 +247,93 @@ def create_map(lat_start: float, long_start: float, zoom: int,
     satellite_images = [[None for _ in range(number_cols)]
                         for _ in range(number_rows)]
 
+    views = []
+    if osm:
+        views.append(0)
+    if gmaps:
+        views.append(1)
+    if gmaps_satellite:
+        views.append(2)
+    print(views)
+
+    skip_rows = []
+    skip_cols = []
+
     """
-    i = 0 -> Map View
-    i = 1 -> Satellite View
+    i = 0 -> Google Maps View
+    i = 1 -> Google Maps Satellite View
     i = 2 -> OpenStreetMap View
     """
-    for i in range(1, 3):
+    for i in views:
         for row in range(number_rows):
             for col in range(number_cols):
 
-                latitude = lat_start + (lat_shift * row)
-                longitude = long_start + (long_shift * col)
+                # Skip points for OSM could not generate image
+                if row in skip_rows and col in skip_cols:
+                    print(f"{row} {col} skipped due to OSM")
+                    c_gmaps += 1
+                    c_gmaps_satellite += 1
+                else:
+                    latitude = lat_start + (lat_shift * row)
+                    longitude = long_start + (long_shift * col)
 
-                if i == 2:
-                    point = (latitude, longitude)
-                    print(point)
-
-                    # north, south, east, west = getting_boundary_coordinates(lat=latitude, long=longitude)
-                    # create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east, west=west)
-                    create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=70, dpi=200,
-                                           default_width=20)
-                    c_osm += 1
-
-                elif i == 1:
-                    url = 'https://www.google.com/maps/'
-
-                    # Map URL
                     if i == 0:
-                        url += '@{lat},{long},{z}z'.format(lat=latitude, long=longitude, z=zoom)
-                    # Satellite URL
-                    elif i == 1:
-                        url += '@{lat},{long},{z}z/data=!3m1!1e3'.format(lat=latitude, long=longitude, z=zoom)
+                        point = (latitude, longitude)
+                        print(point)
 
-                    driver.get(url)
-                    time.sleep(5)
+                        # north, south, east, west = getting_boundary_coordinates(lat=latitude, long=longitude)
+                        # create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east,
+                        # west=west)
+                        osm_image = create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=70, dpi=200,
+                                                           default_width=20)
+                        if not osm_image:
+                            skip_rows.append(row)
+                            skip_cols.append(col)
 
-                    # Remove labels from Satellite view
-                    if i == 1:
-                        js_code_execute(driver, remove_labels[0])
-                        time.sleep(2)
-                        js_code_execute(driver, remove_labels[1])
+                        c_osm += 1
 
-                    # Remove fields from Map view
-                    for j in remove_from_view:
-                        js_code_execute(driver, j)
-
-                    # Let the example load all assets before taking a screenshot
-                    time.sleep(sleep_time)
-                    image = screenshot(screen_width, screen_height, offset_left, offset_top, offset_right,
-                                       offset_bottom)
-
-                    # Scale image up or down if desired, then save in memory
-                    image = scale_image(image, scale)
-                    if i == 0:
-                        # image.save(f"{outfile}-example-{row}-{col}.png")  # To save the row-col position uncomment
-                        # image.save(f"./images/{outfile}-example-{c_map}.png")
-                        c_map += 1
                     else:
-                        # image.save(f"{outfile}-{row}-{col}.png") # To save the row-col position uncomment
-                        f.write(f"{outfile}-{c_map}.png -> Lat: {latitude} Long: {longitude} URL: {url} \n")
-                        image.save(f"./images/{outfile}-{c_image}.png")
-                        satellite_images[row][col] = image
-                        c_image += 1
+                        url = 'https://www.google.com/maps/'
+
+                        # Map URL
+                        if i == 1:
+                            url += '@{lat},{long},{z}z'.format(lat=latitude, long=longitude, z=zoom)
+                        # Satellite URL
+                        elif i == 2:
+                            url += '@{lat},{long},{z}z/data=!3m1!1e3'.format(lat=latitude, long=longitude, z=zoom)
+
+                        driver.get(url)
+                        time.sleep(5)
+
+                        # Remove labels from Satellite view
+                        if i == 2:
+                            js_code_execute(driver, remove_labels[0])
+                            time.sleep(2)
+                            js_code_execute(driver, remove_labels[1])
+
+                        # Remove fields from Map view
+                        for j in remove_from_view:
+                            js_code_execute(driver, j)
+
+                        # Let the example load all assets before taking a screenshot
+                        time.sleep(sleep_time)
+                        image = screenshot(screen_width, screen_height, offset_left, offset_top, offset_right,
+                                           offset_bottom)
+
+                        # Scale image up or down if desired, then save in memory
+                        image = scale_image(image, scale)
+                        if i == 1:
+                            # image.save(f"{outfile}-example-{row}-{col}.png")  # To save the row-col position uncomment
+                            image.save(f"./images/{outfile}-example-{c_gmaps}.png")
+                            c_gmaps += 1
+                        else:
+                            # image.save(f"{outfile}-{row}-{col}.png") # To save the row-col position uncomment
+                            f.write(f"{outfile}-{c_gmaps}.png -> Lat: {latitude} Long: {longitude} URL: {url} \n")
+                            image.save(f"./images/{outfile}-{c_gmaps_satellite}.png")
+                            satellite_images[row][col] = image
+                            c_gmaps_satellite += 1
 
     # Close the browser
     driver.close()
     driver.quit()
     f.close()
-
-    # north, south, east, west = lat_start, lat_start + (lat_shift * number_rows), long_start, long_start + (
-    #            long_shift * number_cols)
-    # create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east, west=west)
-
-    # final = combine_images(satellite_images)
-
-# outfile = 'test.png'
-
-# final.save(outfile)
