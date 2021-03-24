@@ -21,7 +21,7 @@
 - ```gmaps``` Take a screenshot from Google Maps Map View (bool)
 - ```gmaps_satellite``` Take a screenshot from Google Maps Satellite View (bool)
 - ```osm``` Generate an image from Open Street Maps (bool)
-- ```zoom``` Zoom value only applicable for Google Maps (int (0-21))
+- ```zoom``` Zoom value only applicable for Google Maps (int (between 0 and 21))
 
 ## Notes
 

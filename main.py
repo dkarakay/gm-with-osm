@@ -113,6 +113,16 @@ def getting_boundary_coordinates(lat: float, long: float) -> (float, float, floa
 
 
 def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, default_width=6):
+    """
+
+    :param outfile: Outfile name
+    :param c_osm: count of osm image
+    :param point: (lat, long)
+    :param dpi: dpi for the output image
+    :param dist: distance from the given point
+    :param default_width: default width for the roads
+    :return:
+    """
     network_type = 'drive'
 
     fp = f'./images/{outfile}-osm-{c_osm}.png'
