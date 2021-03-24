@@ -41,9 +41,10 @@ def take_screenshot(lat: float, long: float, row: int, col: int, number: int, fi
 
 # Example: 2x2 -> 4 images
 take_screenshot(
-    lat=39.9950785,  # Top left corner latitude
-    long=-83.0113507,  # Top left corner longitude
+    lat=39.9970413,  # Top left corner latitude
+    long=-83.02284,  # Top left corner longitude
     row=2,  # 2 rows
+    col=2,  # 2 cols
     file_name="test",  # Map image: "/images/test-{number}.png"
     number=0,  # Starting from 0 like image-0.png, image-1.png ...
     gmaps=False,  # Take screenshot from Google Maps
