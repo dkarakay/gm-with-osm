@@ -12,16 +12,16 @@
 
 ## Parameters
 
-- ```lat``` Latitude of the top left corner (float)
-- ```long``` Longitude of the top left corner (float)
-- ```row``` Row count (int)
-- ```col``` Col count (int)
-- ```file_name``` File name of the output images (string)
-- ```number``` Number of the file name {file_name}-{number}.png (int)
-- ```gmaps``` Take a screenshot from Google Maps Map View (bool)
-- ```gmaps_satellite``` Take a screenshot from Google Maps Satellite View (bool)
-- ```osm``` Generate an image from Open Street Maps (bool)
-- ```zoom``` Zoom value only applicable for Google Maps (int (between 0 and 21))
+- ```lat``` Latitude of the top left corner **(float)**
+- ```long``` Longitude of the top left corner **(float)**
+- ```row``` Row count **(int)**
+- ```col``` Col count **(int)**
+- ```file_name``` File name of the output images **(string)**
+- ```number``` Number of the file name {file_name}-{number}.png **(int)**
+- ```gmaps``` Take a screenshot from Google Maps Map View **(bool)**
+- ```gmaps_satellite``` Take a screenshot from Google Maps Satellite View **(bool)**
+- ```osm``` Generate an image from Open Street Maps **(bool)**
+- ```zoom``` Zoom value only applicable for Google Maps **(int (between 0 and 21))**
 
 ## Notes
 
