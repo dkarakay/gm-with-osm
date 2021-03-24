@@ -1,4 +1,4 @@
-from main import create_map
+from core.main import create_map
 
 
 def take_screenshot(lat: float, long: float, row: int, col: int, number: int, file_name: str, gmaps: bool,

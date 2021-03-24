@@ -6,3 +6,4 @@
 /.idea
 .ipynb_checkpoints
 example
+osmnx_test.ipynb

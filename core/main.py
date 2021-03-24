@@ -252,7 +252,7 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
     c_osm = number
 
     # Writing coordinates to the file
-    f = open("coordinates.txt", "w+")
+    f = open("../coordinates.txt", "w+")
 
     satellite_images = [[None for _ in range(number_cols)]
                         for _ in range(number_rows)]
