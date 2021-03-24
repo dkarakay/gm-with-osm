@@ -143,13 +143,15 @@ def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, 
 
         if not gdf_nature.empty:
             print('nature')
-            fig, ax = ox.plot_footprints(gdf_nature, ax=ax, bbox=bbox, color='green', filepath=fp, dpi=dpi, save=True)
+            fig, ax = ox.plot_footprints(gdf_nature, ax=ax, bbox=bbox, color='green', filepath=fp, dpi=dpi, save=True,
+                                         show=False)
         if not gdf_water.empty:
             print('water')
-            fig, ax = ox.plot_footprints(gdf_water, ax=ax, bbox=bbox, color='blue', filepath=fp, dpi=dpi, save=True)
+            fig, ax = ox.plot_footprints(gdf_water, ax=ax, bbox=bbox, color='blue', filepath=fp, dpi=dpi, save=True,
+                                         show=False)
         if not gdf_building.empty:
             print('building')
-            fig, ax = ox.plot_footprints(gdf_building, ax=ax, bbox=bbox, filepath=fp, dpi=dpi, save=True)
+            fig, ax = ox.plot_footprints(gdf_building, ax=ax, bbox=bbox, filepath=fp, dpi=dpi, save=True, show=False)
         print(f'finished {c_osm}')
         return True
 
