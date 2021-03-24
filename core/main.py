@@ -143,12 +143,12 @@ def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, 
 
         if not gdf_nature.empty:
             print('nature')
-            fig, ax = ox.plot_footprints(gdf_nature, ax=ax, bbox=bbox, color='green', filepath=fp, dpi=dpi, save=True,
-                                         show=False)
+            fig, ax = ox.plot_footprints(gdf_nature, ax=ax, bbox=bbox, color='green', filepath=fp, dpi=dpi, show=False,
+                                         save=True)
         if not gdf_water.empty:
             print('water')
-            fig, ax = ox.plot_footprints(gdf_water, ax=ax, bbox=bbox, color='blue', filepath=fp, dpi=dpi, save=True,
-                                         show=False)
+            fig, ax = ox.plot_footprints(gdf_water, ax=ax, bbox=bbox, color='blue', filepath=fp, dpi=dpi, show=False,
+                                         save=True)
         if not gdf_building.empty:
             print('building')
             fig, ax = ox.plot_footprints(gdf_building, ax=ax, bbox=bbox, filepath=fp, dpi=dpi, save=True, show=False)
@@ -268,8 +268,7 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
         views.append(2)
     print(views)
 
-    skip_rows = []
-    skip_cols = []
+    skips = [[]]
 
     """
     i = 0 -> Google Maps View
@@ -281,7 +280,8 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
             for col in range(number_cols):
 
                 # Skip points for OSM could not generate image
-                if row in skip_rows and col in skip_cols:
+                coord = [row, col]
+                if coord in skips:
                     print(f"{row} {col} skipped due to OSM")
                     c_gmaps += 1
                     c_gmaps_satellite += 1
@@ -299,8 +299,8 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
                         osm_image = create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=70, dpi=200,
                                                            default_width=20)
                         if not osm_image:
-                            skip_rows.append(row)
-                            skip_cols.append(col)
+                            coordinate = [row, col]
+                            skips.append(coordinate)
 
                         c_osm += 1
 
