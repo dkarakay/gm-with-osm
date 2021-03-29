@@ -294,6 +294,7 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
                 for col in range(number_cols):
                     coord = [row, col]
                     skips.append(coord)
+
         # DRIVER Selection
         # Chromedriver should be in the current directory.
         # Modify these commands to find proper driver Chrome or Firefox

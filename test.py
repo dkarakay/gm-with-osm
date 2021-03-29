@@ -48,7 +48,7 @@ take_screenshot(
     file_name="test",  # Map image: "/images/test-{number}.png"
     number=0,  # Starting from 0 like image-0.png, image-1.png ...
     gmaps=False,  # Take screenshot from Google Maps
-    gmaps_satellite=True,  # Take screenshot from Google Maps Satellite
-    osm=False,  # Generate screenshots from OSM
+    gmaps_satellite=False,  # Take screenshot from Google Maps Satellite
+    osm=True,  # Generate screenshots from OSM
     zoom=19,
 )
