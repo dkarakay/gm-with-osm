@@ -152,11 +152,9 @@ def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, 
             # print('building')
             fig, ax = ox.plot_footprints(gdf_building, ax=ax, bbox=bbox, filepath=fp, dpi=dpi, save=True, show=False,
                                          close=True)
-        print(f'finished {c_osm}')
         return True
 
     except:
-        print(f'not found {c_osm}')
         return False
 
 
@@ -275,10 +273,11 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
                 osm_image = create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=70, dpi=200,
                                                    default_width=20)
                 if osm_image:
-                    coordinate = [row, col]
+                    print(f'finished {row} {col}')
                     temp_file.write(f"{row}-{col} \n")
                     c_osm += 1
-
+                else:
+                    print(f'not found {row} {col}')
     else:
         try:
             temp_file = open("osm_output.txt", "r")
@@ -315,10 +314,12 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
                     latitude = lat_start + (lat_shift * row)
                     longitude = long_start + (long_shift * col)
 
+                    point = (latitude, longitude)
+                    print(point)
+
                     coord = [row, col]
                     if coord in skips:
                         url = 'https://www.google.com/maps/'
-
                         # Map URL
                         if i == 1:
                             url += '@{lat},{long},{z}z'.format(lat=latitude, long=longitude, z=zoom)

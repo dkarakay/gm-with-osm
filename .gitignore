@@ -7,3 +7,4 @@
 .ipynb_checkpoints
 example
 osmnx_test.ipynb
+osm_output.txt

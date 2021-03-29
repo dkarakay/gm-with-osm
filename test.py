@@ -43,12 +43,12 @@ def take_screenshot(lat: float, long: float, row: int, col: int, number: int, fi
 take_screenshot(
     lat=39.9970413,  # Top left corner latitude
     long=-83.02284,  # Top left corner longitude
-    row=2,  # 2 rows
-    col=2,  # 2 cols
+    row=3,  # 2 rows
+    col=3,  # 2 cols
     file_name="test",  # Map image: "/images/test-{number}.png"
     number=0,  # Starting from 0 like image-0.png, image-1.png ...
     gmaps=False,  # Take screenshot from Google Maps
-    gmaps_satellite=False,  # Take screenshot from Google Maps Satellite
-    osm=True,  # Generate screenshots from OSM
+    gmaps_satellite=True,  # Take screenshot from Google Maps Satellite
+    osm=False,  # Generate screenshots from OSM
     zoom=19,
 )
