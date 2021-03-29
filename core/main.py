@@ -60,9 +60,8 @@ def screenshot(screen_width: int, screen_height: int,
     image = pyscreenshot.grab(bbox=(x1, y1, x2, y2))
 
     # Specific settings for my computer to match OSM with Google Maps
-    screen = True
-    if screen:
-        image = pyscreenshot.grab(bbox=(420, 150, 1020, 820))
+
+    image = pyscreenshot.grab(bbox=(420, 150, 1020, 820))
     return image
 
 
@@ -139,19 +138,20 @@ def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, 
         gdf_nature = ox.geometries_from_point(point, tag_nature, dist=dist)
         gdf_water = ox.geometries_from_point(point, tag_water, dist=dist)
 
-        fig, ax = ox.plot_figure_ground(G, default_width=default_width, show=False)
+        fig, ax = ox.plot_figure_ground(G, default_width=default_width, show=False, close=True)
 
         if not gdf_nature.empty:
-            print('nature')
+            # print('nature')
             fig, ax = ox.plot_footprints(gdf_nature, ax=ax, bbox=bbox, color='green', filepath=fp, dpi=dpi, show=False,
-                                         save=True)
+                                         save=True, close=True)
         if not gdf_water.empty:
-            print('water')
+            # print('water')
             fig, ax = ox.plot_footprints(gdf_water, ax=ax, bbox=bbox, color='blue', filepath=fp, dpi=dpi, show=False,
-                                         save=True)
+                                         save=True, close=True)
         if not gdf_building.empty:
-            print('building')
-            fig, ax = ox.plot_footprints(gdf_building, ax=ax, bbox=bbox, filepath=fp, dpi=dpi, save=True, show=False)
+            # print('building')
+            fig, ax = ox.plot_footprints(gdf_building, ax=ax, bbox=bbox, filepath=fp, dpi=dpi, save=True, show=False,
+                                         close=True)
         print(f'finished {c_osm}')
         return True
 
@@ -232,15 +232,6 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
         zoom: Zoom level for Google Maps
     """
 
-    # DRIVER Selection
-    # Chromedriver should be in the current directory.
-    # Modify these commands to find proper driver Chrome or Firefox
-    PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
-    DRIVER_BIN = os.path.join(PROJECT_ROOT, "chromedriver")
-    driver = webdriver.Chrome(executable_path=DRIVER_BIN)
-
-    driver.maximize_window()
-
     # Calculate amount to shift lat/long each screenshot
     screen_width, screen_height = get_screen_resolution()
 
@@ -260,65 +251,80 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
                         for _ in range(number_rows)]
 
     views = []
-    if osm:
-        views.append(0)
     if gmaps:
         views.append(1)
     if gmaps_satellite:
-        views.append(2)
+        views.append(0)
     print(views)
 
     skips = [[]]
 
-    """
-    i = 0 -> Google Maps View
-    i = 1 -> Google Maps Satellite View
-    i = 2 -> OpenStreetMap View
-    """
-    for i in views:
+    if osm:
+        # Saving row & cols of OSM to match with GMaps
+        temp_file = open("osm_output.txt", "w+")
+
         for row in range(number_rows):
             for col in range(number_cols):
 
-                # Skip points for OSM could not generate image
-                coord = [row, col]
-                if coord in skips:
-                    print(f"{row} {col} skipped due to OSM")
-                    c_gmaps += 1
-                    c_gmaps_satellite += 1
-                else:
+                latitude = lat_start + (lat_shift * row)
+                longitude = long_start + (long_shift * col)
+
+                point = (latitude, longitude)
+                print(point)
+                osm_image = create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=70, dpi=200,
+                                                   default_width=20)
+                if osm_image:
+                    coordinate = [row, col]
+                    temp_file.write(f"{row}-{col} \n")
+                    c_osm += 1
+
+
+    else:
+        temp_file = open("osm_output.txt", "r")
+
+        lines = temp_file.readlines()
+        for line in lines:
+            row, col = line.strip().split('-')
+            pos = [int(row), int(col)]
+            skips.append(pos)
+
+        # DRIVER Selection
+        # Chromedriver should be in the current directory.
+        # Modify these commands to find proper driver Chrome or Firefox
+        PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
+        DRIVER_BIN = os.path.join(PROJECT_ROOT, "chromedriver")
+        driver = webdriver.Chrome(executable_path=DRIVER_BIN)
+
+        driver.maximize_window()
+
+        """
+        i = 0 -> Google Maps View
+        i = 1 -> Google Maps Satellite View
+        """
+        for i in views:
+            for row in range(number_rows):
+                for col in range(number_cols):
+
                     latitude = lat_start + (lat_shift * row)
                     longitude = long_start + (long_shift * col)
 
-                    if i == 0:
-                        point = (latitude, longitude)
-                        print(point)
-
-                        # north, south, east, west = getting_boundary_coordinates(lat=latitude, long=longitude)
-                        # create_map_from_osm(outfile=outfile, c_osm=c_osm, north=north, south=south, east=east,
-                        # west=west)
-                        osm_image = create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=70, dpi=200,
-                                                           default_width=20)
-                        if not osm_image:
-                            coordinate = [row, col]
-                            skips.append(coordinate)
-
-                        c_osm += 1
-
-                    else:
+                    coord = [row, col]
+                    if coord in skips:
                         url = 'https://www.google.com/maps/'
 
                         # Map URL
                         if i == 1:
                             url += '@{lat},{long},{z}z'.format(lat=latitude, long=longitude, z=zoom)
                         # Satellite URL
-                        elif i == 2:
-                            url += '@{lat},{long},{z}z/data=!3m1!1e3'.format(lat=latitude, long=longitude, z=zoom)
+                        elif i == 0:
+                            url += '@{lat},{long},{z}z/data=!3m1!1e3'.format(lat=latitude, long=longitude,
+                                                                             z=zoom)
 
                         driver.get(url)
                         time.sleep(5)
 
                         # Remove labels from Satellite view
-                        if i == 2:
+                        if i == 0:
                             js_code_execute(driver, remove_labels[0])
                             time.sleep(2)
                             js_code_execute(driver, remove_labels[1])
@@ -340,12 +346,15 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
                             c_gmaps += 1
                         else:
                             # image.save(f"{outfile}-{row}-{col}.png") # To save the row-col position uncomment
-                            f.write(f"{outfile}-{c_gmaps}.png -> Lat: {latitude} Long: {longitude} URL: {url} \n")
+                            f.write(
+                                f"{outfile}-{c_gmaps}.png -> Lat: {latitude} Long: {longitude} URL: {url} \n")
                             image.save(f"./images/{outfile}-{c_gmaps_satellite}.png")
                             satellite_images[row][col] = image
                             c_gmaps_satellite += 1
 
-    # Close the browser
-    driver.close()
-    driver.quit()
+        # Close the browser
+        driver.close()
+        driver.quit()
+
+    temp_file.close()
     f.close()
