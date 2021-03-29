@@ -244,8 +244,10 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
     c_gmaps_satellite = number
     c_osm = number
 
+    temp_file = None
+
     # Writing coordinates to the file
-    f = open("../coordinates.txt", "w+")
+    f = open("coordinates.txt", "w+")
 
     satellite_images = [[None for _ in range(number_cols)]
                         for _ in range(number_rows)]
@@ -255,7 +257,6 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
         views.append(1)
     if gmaps_satellite:
         views.append(0)
-    print(views)
 
     skips = [[]]
 
@@ -278,16 +279,21 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
                     temp_file.write(f"{row}-{col} \n")
                     c_osm += 1
 
-
     else:
-        temp_file = open("osm_output.txt", "r")
+        try:
+            temp_file = open("osm_output.txt", "r")
 
-        lines = temp_file.readlines()
-        for line in lines:
-            row, col = line.strip().split('-')
-            pos = [int(row), int(col)]
-            skips.append(pos)
-
+            lines = temp_file.readlines()
+            for line in lines:
+                row, col = line.strip().split('-')
+                pos = [int(row), int(col)]
+                skips.append(pos)
+        except:
+            print("Run the OSM first or it will not skip anything")
+            for row in range(number_rows):
+                for col in range(number_cols):
+                    coord = [row, col]
+                    skips.append(coord)
         # DRIVER Selection
         # Chromedriver should be in the current directory.
         # Modify these commands to find proper driver Chrome or Firefox
@@ -356,5 +362,6 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
         driver.close()
         driver.quit()
 
-    temp_file.close()
     f.close()
+    if temp_file is not None:
+        temp_file.close()

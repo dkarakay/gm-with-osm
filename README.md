@@ -23,6 +23,11 @@
 - ```osm``` Generate an image from Open Street Maps **(bool)**
 - ```zoom``` Zoom value only applicable for Google Maps **(int (between 0 and 21))**
 
+## Procedure
+- If you want to have matching from OSM and GMaps, you need to run the test.py with **osm=True**. 
+  This will create a **osm_output.txt** file which GMaps read this file to generate matched images.
+- If you don't want to read from OSM, the GMaps will not skip any row or cols.  
+
 ## Notes
 
 - The Chromedriver inside the repo is for **Mac OS**. The version: _ChromeDriver 88.0.4324.96_
