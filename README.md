@@ -10,6 +10,12 @@
 - Modify _take_screenshot_ function inside **test.py**
 - Run ```python test.py```
 
+## Procedure
+- If you want to have matching from OSM and GMaps, you need to run the test.py with ```osm=True```. 
+  This will create a **osm_output.txt** file which GMaps read this file to generate matched images. 
+  Then you should set ```osm=False``` and set ```gmaps``` or ```gmaps_satellite``` to True, so that the matching will be done.
+- If you don't want to read from OSM (just remove the **osm_ouput.txt** from the directory), the GMaps will not skip any row or cols.  
+
 ## Parameters
 
 - ```lat``` Latitude of the top left corner **(float)**
@@ -22,11 +28,6 @@
 - ```gmaps_satellite``` Take a screenshot from Google Maps Satellite View **(bool)**
 - ```osm``` Generate an image from Open Street Maps **(bool)**
 - ```zoom``` Zoom value only applicable for Google Maps **(int (between 0 and 21))**
-
-## Procedure
-- If you want to have matching from OSM and GMaps, you need to run the test.py with **osm=True**. 
-  This will create a **osm_output.txt** file which GMaps read this file to generate matched images.
-- If you don't want to read from OSM, the GMaps will not skip any row or cols.  
 
 ## Notes
 
