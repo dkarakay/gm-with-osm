@@ -61,7 +61,7 @@ def screenshot(screen_width: int, screen_height: int,
 
     # Specific settings for my computer to match OSM with Google Maps
 
-    image = pyscreenshot.grab(bbox=(420, 150, 1020, 820))
+    image = pyscreenshot.grab(bbox=(380, 150, 1050, 820))
     return image
 
 
@@ -270,10 +270,10 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
 
                 point = (latitude, longitude)
                 print(point)
-                osm_image = create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=70, dpi=200,
-                                                   default_width=20)
+                osm_image = create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=75, dpi=200,
+                                                   default_width=25)
                 if osm_image:
-                    print(f'finished {row} {col}')
+                    print(f'FOUND {row} {col}')
                     temp_file.write(f"{row}-{col} \n")
                     c_osm += 1
                 else:
