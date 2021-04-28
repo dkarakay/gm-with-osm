@@ -21,7 +21,7 @@ remove_from_view = [
 remove_labels = [
     "var element = document.getElementsByClassName(\"searchbox-hamburger-container\")[0];"
     "element.getElementsByTagName(\"button\")[0].click();",
-    "var element = document.getElementsByClassName(\"widget-settings-earth-item\")[0];"
+    "var element = document.getElementsByClassName(\"mapsTactileClientSettingsMain__widget-settings-earth-item\")[0];"
     "element.getElementsByTagName(\"button\")[1].click();",
 
 ]
