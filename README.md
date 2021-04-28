@@ -31,6 +31,6 @@
 
 ## Notes
 
-- The Chromedriver inside the repo is for **Mac OS**. The version: _ChromeDriver 88.0.4324.96_
+- The Chromedriver inside the repo is for **Mac OS**. The version: _ChromeDriver 90.0.4430.24_
 - Download the latest or suitable version for Chrome from https://chromedriver.chromium.org/downloads
 - Download the latest or suitable version for Firefox Geckodriver from https://github.com/mozilla/geckodriver/releases
