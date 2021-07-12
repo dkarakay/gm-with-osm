@@ -1,8 +1,7 @@
 EasyProcess==0.3
-entrypoint2==0.2.3
+entrypoint2==0.2.4
 mss==6.1.0
 nose==1.3.7
-Pillow==8.1.2
-pyscreenshot==2.3
+Pillow==8.3.1
 selenium==3.141.0
-urllib3==1.26.4
+urllib3==1.26.6
