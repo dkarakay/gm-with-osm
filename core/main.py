@@ -1,29 +1,27 @@
 import os
 import time
 import tkinter
+import pyautogui
 import osmnx as ox
 
 from PIL import Image
-import pyscreenshot
+from PIL import ImageGrab
 from selenium import webdriver
 
 # Removing fields from Google Maps
 remove_from_view = [
-    "var element = document.getElementById(\"omnibox-container\");element.remove();",
-    "var element = document.getElementById(\"watermark\");element.remove();",
-    "var element = document.getElementById(\"vasquette\");element.remove();",
-    "var element = document.getElementsByClassName(\"app-viewcard-strip\");element[0].remove();",
-    "var element = document.getElementsByClassName(\"scene-footer-container\");element[0].remove();",
+    "document.getElementById(\"omnibox-container\").remove();",
+    "document.getElementById(\"watermark\").remove();",
+    "document.getElementById(\"vasquette\").remove();",
+    "document.getElementsByClassName(\"app-viewcard-strip\")[0].remove();",
+    "document.getElementsByClassName(\"scene-footer-container\")[0].remove();",
+    "document.getElementById(\"s0wlme-haAclf\").remove();"
 
 ]
 
 # Removing labels from Google Maps Satellite View
 remove_labels = [
-    "var element = document.getElementsByClassName(\"searchbox-hamburger-container\")[0];"
-    "element.getElementsByTagName(\"button\")[0].click();",
-    "var element = document.getElementsByClassName(\"mapsTactileClientSettingsMain__widget-settings-earth-item\")[0];"
-    "element.getElementsByTagName(\"button\")[1].click();",
-
+    "document.getElementsByClassName(\"t9hXV-cdLCv-checkbox\")[1].click();",
 ]
 
 
@@ -57,11 +55,11 @@ def screenshot(screen_width: int, screen_height: int,
     y1 = offset_top * screen_height
     x2 = (offset_right * -screen_width) + screen_width
     y2 = (offset_bottom * -screen_height) + screen_height
-    image = pyscreenshot.grab(bbox=(x1, y1, x2, y2))
+    # image = pyscreenshot.grab(bbox=(x1, y1, x2, y2))
 
     # Specific settings for my computer to match OSM with Google Maps
-
-    image = pyscreenshot.grab(bbox=(380, 150, 1050, 820))
+    image = ImageGrab.grab(bbox=(800, 300, 2100, 1600))
+    # image = pyscreenshot.grab(bbox=(380, 150, 1050, 820))
     return image
 
 
@@ -299,8 +297,10 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
         # Modify these commands to find proper driver Chrome or Firefox
         PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
         DRIVER_BIN = os.path.join(PROJECT_ROOT, "chromedriver")
-        driver = webdriver.Chrome(executable_path=DRIVER_BIN)
 
+        options = webdriver.ChromeOptions()
+        options.add_argument("--start-maximized")
+        driver = webdriver.Chrome(executable_path=DRIVER_BIN, chrome_options=options)
         driver.maximize_window()
 
         """
@@ -333,9 +333,11 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
 
                         # Remove labels from Satellite view
                         if i == 0:
-                            js_code_execute(driver, remove_labels[0])
+                            pyautogui.moveTo(60, 750, 2)
+                            pyautogui.moveTo(350, 750, 2)
+                            pyautogui.click(x=350, y=750)
                             time.sleep(2)
-                            js_code_execute(driver, remove_labels[1])
+                            js_code_execute(driver, remove_labels[0])
 
                         # Remove fields from Map view
                         for j in remove_from_view:
