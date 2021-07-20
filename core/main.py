@@ -72,6 +72,13 @@ def scale_image(image: Image, scale: float) -> Image:
     return image
 
 
+def crop_image(image: Image, size: float) -> Image:
+    width, height = image.size  # Get dimensions
+    left, top = width / size, height / size
+    right, bottom = (size - 1) * width / size, (size - 1) * height / size
+    return image.crop((left, top, right, bottom))
+
+
 def combine_images(images: list) -> Image:
     """Return combined image from a grid of identically-sized images.
     images is a 2d list of Image objects. The images should
@@ -110,9 +117,12 @@ def getting_boundary_coordinates(lat: float, long: float) -> (float, float, floa
     return north, south, east, west
 
 
-def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, default_width=6):
+def create_square_from_osm(crop_size: int, crop_status: bool, outfile: str, c_osm: int, point, dpi=100, dist=2000,
+                           default_width=6):
     """
 
+    :param crop_size: Crop size of the output
+    :param crop_status: Determine whether the output will be cropped or not
     :param outfile: Outfile name
     :param c_osm: count of osm image
     :param point: (lat, long)
@@ -132,7 +142,8 @@ def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, 
     bbox = ox.utils_geo.bbox_from_point(point, dist=dist)
 
     try:
-        G = ox.graph_from_point(point, network_type=network_type, dist=dist, truncate_by_edge=True, retain_all=True)
+        G = ox.graph_from_point(point, network_type=network_type, dist=dist, truncate_by_edge=True,
+                                retain_all=True, clean_periphery=True)
         gdf_building = ox.geometries_from_point(point, tag_building, dist=dist)
         gdf_nature = ox.geometries_from_point(point, tag_nature, dist=dist)
         gdf_water = ox.geometries_from_point(point, tag_water, dist=dist)
@@ -151,6 +162,11 @@ def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, 
             # print('building')
             fig, ax = ox.plot_footprints(gdf_building, ax=ax, bbox=bbox, filepath=fp, dpi=dpi, save=True, show=False,
                                          close=True)
+
+        if crop_status:
+            image = Image.open(fp)
+            image = crop_image(image=image, size=crop_size)
+            image.save(f"./images/{outfile}-osm-{c_osm}.png")
         return True
 
     except:
@@ -186,16 +202,18 @@ def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, we
         fig, ax = ox.plot_footprints(gdf_building, ax=ax, filepath=fp, dpi=dpi, save=True)
 
 
-def create_map(gmaps: bool, gmaps_satellite: bool,
+def create_map(crop_size: int, crop_status: bool, gmaps: bool, gmaps_satellite: bool,
                lat_start: float, long_start: float, number_rows: int, number_cols: int,
                osm: bool, zoom: int, number: int = 0,
                scale: float = 1, sleep_time: float = 0,
                offset_left: float = 0, offset_top: float = 0,
                offset_right: float = 0, offset_bottom: float = 0,
-               outfile: str = None, ):
+               outfile: str = None):
     """
 
     Args:
+        crop_size: Crop size of the output.
+        crop_status: Crop status of the output, if you do not want it make it False
         gmaps: Take screenshot from Google Maps
         gmaps_satellite: Take screenshot from Google Maps Satellite
         lat_start: Top-left coordinate to start taking screenshots.
@@ -270,7 +288,7 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
                 point = (latitude, longitude)
                 print(point)
                 osm_image = create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=75, dpi=200,
-                                                   default_width=25)
+                                                   crop_size=crop_size, crop_status=crop_status, default_width=25)
                 if osm_image:
                     print(f'FOUND {row} {col}')
                     temp_file.write(f"{row}-{col} \n")
@@ -330,12 +348,12 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
                                                                              z=zoom)
 
                         driver.get(url)
-                        time.sleep(5)
+                        time.sleep(4)
 
                         # Remove labels from Satellite view
                         if i == 0:
-                            pyautogui.moveTo(60, 750, 2)
-                            pyautogui.moveTo(350, 750, 2)
+                            pyautogui.moveTo(60, 750, 1)
+                            pyautogui.moveTo(350, 750, 1)
                             pyautogui.click(x=350, y=750)
                             time.sleep(2)
                             js_code_execute(driver, remove_labels[0])
@@ -351,6 +369,9 @@ def create_map(gmaps: bool, gmaps_satellite: bool,
 
                         # Scale image up or down if desired, then save in memory
                         image = scale_image(image, scale)
+
+                        if crop_status:
+                            image = crop_image(image=image, size=crop_size)
                         if i == 1:
                             # image.save(f"{outfile}-example-{row}-{col}.png")  # To save the row-col position uncomment
                             image.save(f"./images/{outfile}-example-{c_gmaps}.png")

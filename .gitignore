@@ -1,7 +1,6 @@
 /images
 /cache
 *__pycache__
-/main_2.py
 /coordinates.txt
 /.idea
 .ipynb_checkpoints

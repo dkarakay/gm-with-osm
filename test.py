@@ -2,7 +2,7 @@ from core.main import create_map
 
 
 def take_screenshot(lat: float, long: float, row: int, col: int, number: int, file_name: str, gmaps: bool,
-                    gmaps_satellite: bool, zoom: int, osm: True):
+                    gmaps_satellite: bool, zoom: int, osm: True, crop_status: bool):
     """
 
     Args:
@@ -20,6 +20,8 @@ def take_screenshot(lat: float, long: float, row: int, col: int, number: int, fi
 
     """
     create_map(
+        crop_size=15,
+        crop_status=crop_status,
         gmaps=gmaps,
         gmaps_satellite=gmaps_satellite,
         lat_start=lat,
@@ -41,12 +43,13 @@ def take_screenshot(lat: float, long: float, row: int, col: int, number: int, fi
 
 # Example: 2x2 -> 4 images
 take_screenshot(
-    lat=37.795925,  # Top left corner latitude
-    long=-122.3981861,  # Top left corner longitude
+    lat=40.0052739,  # Top left corner latitude
+    long=-83.0028614,  # Top left corner longitude
     row=2,  # 2 rows
     col=2,  # 2 cols
+    crop_status=False,  # Crop status of the output
     file_name="image",  # Map image: "/images/test-{number}.png"
-    number=1,  # Starting from 0 like image-0.png, image-1.png ...
+    number=1,  # Starting from 0 like image-0.png, image-1-normal.png ...
     gmaps=False,  # Take screenshot from Google Maps
     gmaps_satellite=False,  # Take screenshot from Google Maps Satellite
     osm=True,  # Generate screenshots from OSM
