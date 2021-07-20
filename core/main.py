@@ -117,7 +117,7 @@ def getting_boundary_coordinates(lat: float, long: float) -> (float, float, floa
     return north, south, east, west
 
 
-def create_square_from_osm(crop_size: int, crop_status: bool, outfile: str, c_osm: int, point, dpi=100, dist=2000,
+def create_square_from_osm(crop_size: float, crop_status: bool, outfile: str, c_osm: int, point, dpi=100, dist=2000,
                            default_width=6):
     """
 
@@ -202,7 +202,7 @@ def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, we
         fig, ax = ox.plot_footprints(gdf_building, ax=ax, filepath=fp, dpi=dpi, save=True)
 
 
-def create_map(crop_size: int, crop_status: bool, gmaps: bool, gmaps_satellite: bool,
+def create_map(crop_size: float, crop_status: bool, gmaps: bool, gmaps_satellite: bool,
                lat_start: float, long_start: float, number_rows: int, number_cols: int,
                osm: bool, zoom: int, number: int = 0,
                scale: float = 1, sleep_time: float = 0,
@@ -288,7 +288,7 @@ def create_map(crop_size: int, crop_status: bool, gmaps: bool, gmaps_satellite: 
                 point = (latitude, longitude)
                 print(point)
                 osm_image = create_square_from_osm(outfile=outfile, c_osm=c_osm, point=point, dist=75, dpi=200,
-                                                   crop_size=crop_size, crop_status=crop_status, default_width=25)
+                                                   crop_size=crop_size - 2, crop_status=crop_status, default_width=25)
                 if osm_image:
                     print(f'FOUND {row} {col}')
                     temp_file.write(f"{row}-{col} \n")
