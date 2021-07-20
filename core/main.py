@@ -7,6 +7,7 @@ import osmnx as ox
 from PIL import Image
 from PIL import ImageGrab
 from selenium import webdriver
+from core.tags import TagTypes
 
 # Removing fields from Google Maps
 remove_from_view = [
@@ -25,6 +26,16 @@ remove_labels = [
 ]
 
 
+def calc_latitude_shift(screen_height: int, percent_hidden: float, zoom: int) -> float:
+    """Return the amount to shift latitude per row of screenshots."""
+    return -0.000002051 * screen_height * (1 - percent_hidden) * (1 / 1.7 ** (zoom - 18))
+
+
+def calc_longitude_shift(screen_width: int, percent_hidden: float, zoom: int) -> float:
+    """Return the amount to shift longitude per column of screenshots."""
+    return 0.00000268 * screen_width * (1 - percent_hidden) * (1 / 1.7 ** (zoom - 18))
+
+
 def js_code_execute(driver, js_string: str):
     """Execute the JS code"""
     driver.execute_script(js_string)
@@ -35,16 +46,6 @@ def get_screen_resolution() -> tuple:
     root = tkinter.Tk()
     root.withdraw()
     return root.winfo_screenwidth(), root.winfo_screenheight()
-
-
-def calc_latitude_shift(screen_height: int, percent_hidden: float, zoom: int) -> float:
-    """Return the amount to shift latitude per row of screenshots."""
-    return -0.000002051 * screen_height * (1 - percent_hidden) * (1 / 1.7 ** (zoom - 18))
-
-
-def calc_longitude_shift(screen_width: int, percent_hidden: float, zoom: int) -> float:
-    """Return the amount to shift longitude per column of screenshots."""
-    return 0.00000268 * screen_width * (1 - percent_hidden) * (1 / 1.7 ** (zoom - 18))
 
 
 def screenshot(screen_width: int, screen_height: int,
@@ -124,9 +125,9 @@ def create_square_from_osm(outfile: str, c_osm: int, point, dpi=100, dist=2000, 
 
     fp = f'./images/{outfile}-osm-{c_osm}.png'
 
-    tag_building = {'building': True}
-    tag_nature = {'natural': True, 'landuse': 'forest', 'landuse': 'grass'}
-    tag_water = {'natural': 'water'}
+    tag_building = TagTypes.building
+    tag_nature = TagTypes.nature
+    tag_water = TagTypes.water
 
     bbox = ox.utils_geo.bbox_from_point(point, dist=dist)
 
@@ -163,17 +164,17 @@ def create_map_from_osm(outfile: str, c_osm: int, north: float, south: float, we
 
     fp = f'./images/{outfile}-osm-{c_osm}.png'
 
-    tag_building = {'building': True}
-    tag_water = {'natural': 'water'}
+    tag_building = TagTypes.building
+    tag_nature = TagTypes.nature
+    tag_water = TagTypes.water
 
     ax = None
 
     G = ox.graph_from_bbox(north, south, east, west, network_type=network_type,
-                           truncate_by_edge=True, retain_all=True, clean_periphery=True)
+                           truncate_by_edge=True, retain_all=True, clean_periphery=False)
 
     gdf_building = ox.geometries_from_bbox(north, south, east, west, tags=tag_building)
-    gdf_nature = ox.geometries_from_bbox(north, south, east, west,
-                                         tags={'natural': True, 'landuse': 'forest', 'landuse': 'grass'})
+    gdf_nature = ox.geometries_from_bbox(north, south, east, west, tags=tag_nature)
     gdf_water = ox.geometries_from_bbox(north, south, east, west, tags=tag_water)
 
     fig, ax = ox.plot_figure_ground(G, default_width=default_width, dpi=dpi, filepath=fp, show=False)
