@@ -7,4 +7,4 @@ dependencies:
   - python-igraph
   - pip
   - pip:
-      - -r file:requirements.txt
+      - -r requirements.txt

@@ -35,6 +35,6 @@
 ## Notes
 
 - Based on [OSMnx](https://github.com/gboeing/osmnx)
-- The Chromedriver inside the repo is for **macOS**. The version: _ChromeDriver 90.0.4430.24_
+- The Chromedriver inside the repo is for **macOS for M1**. The version: _ChromeDriver 102.0.5005.61_
 - Download the latest or suitable version for Chrome from https://chromedriver.chromium.org/downloads
 - Download the latest or suitable version for Firefox Geckodriver from https://github.com/mozilla/geckodriver/releases

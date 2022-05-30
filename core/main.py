@@ -14,15 +14,16 @@ remove_from_view = [
     "document.getElementById(\"omnibox-container\").remove();",
     "document.getElementById(\"watermark\").remove();",
     "document.getElementById(\"vasquette\").remove();",
+    "document.getElementById(\"assistive-chips\").remove();",
     "document.getElementsByClassName(\"app-viewcard-strip\")[0].remove();",
     "document.getElementsByClassName(\"scene-footer-container\")[0].remove();",
-    "document.getElementById(\"s0wlme-haAclf\").remove();"
+    "document.getElementsByClassName(\"pzaG1c\")[0].remove();",
 
 ]
 
 # Removing labels from Google Maps Satellite View
 remove_labels = [
-    "document.getElementsByClassName(\"t9hXV-cdLCv-checkbox\")[1].click();",
+    "document.getElementsByClassName(\"xzUcD\")[1].click();",
 ]
 
 
@@ -352,9 +353,9 @@ def create_map(crop_size: float, crop_status: bool, gmaps: bool, gmaps_satellite
 
                         # Remove labels from Satellite view
                         if i == 0:
-                            pyautogui.moveTo(60, 750, 1)
-                            pyautogui.moveTo(350, 750, 1)
-                            pyautogui.click(x=350, y=750)
+                            pyautogui.moveTo(60, 960, 1)
+                            pyautogui.moveTo(390, 960, 1)
+                            pyautogui.click(x=390, y=960)
                             time.sleep(2)
                             js_code_execute(driver, remove_labels[0])
 
